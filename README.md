@@ -1,3 +1,9 @@
-# mobile_homework_2
-
-A new Flutter project.
+# Food mobile application
+### Demo:
+![586417992_25559333640359394_5221528317571486869_n](https://github.com/user-attachments/assets/13ed326b-bae4-4f61-8419-c8004b5684cd)
+![586346272_25559333677026057_4717154652752913564_n](https://github.com/user-attachments/assets/9ddc6ad7-6ea9-49cc-bd81-9697c1dc35c0)
+![586059132_25559333687026056_5224505611169754363_n](https://github.com/user-attachments/assets/0ee67f98-2498-4364-830f-8aed2d7bb6d4)
+![587341340_25559333467026078_1495864320750176113_n](https://github.com/user-attachments/assets/df8d2948-53d8-4a50-93e0-2156cc5b2368)
+![585100483_25559333597026065_8972034356165970060_n](https://github.com/user-attachments/assets/5d8bb4a0-dcce-4f3b-8997-39dbd072c00e)
+![587110627_25559333787026046_2914125314990058170_n](https://github.com/user-attachments/assets/a1a91151-b87d-4268-9d56-3a9f4233b480)
+![585350742_25559333593692732_3580017775588626112_n](https://github.com/user-attachments/assets/d948bd9c-43b7-4b10-acff-44585dcfbb06)
