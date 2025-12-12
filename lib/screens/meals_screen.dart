@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/meal.dart';
+import '../models/favorite_meal.dart';
+import '../services/favorites_service.dart';
 import '../services/meal_service.dart';
 import '../widgets/meal_card.dart';
 import '../widgets/search_bar.dart';
 import 'meal_detail_screen.dart';
+import 'favorites_screen.dart';
 
 class MealsScreen extends StatefulWidget {
   final String categoryName;
@@ -16,14 +19,18 @@ class MealsScreen extends StatefulWidget {
 
 class _MealsScreenState extends State<MealsScreen> {
   final MealService _mealService = MealService();
+  final FavoritesService _favoritesService = FavoritesService();
   List<Meal> _meals = [];
   List<Meal> _filteredMeals = [];
   bool _isLoading = true;
+  bool _favoritesLoading = true;
+  Set<String> _favoriteIds = {};
 
   @override
   void initState() {
     super.initState();
     _loadMeals();
+    _loadFavorites();
   }
 
   Future<void> _loadMeals() async {
@@ -33,6 +40,31 @@ class _MealsScreenState extends State<MealsScreen> {
       _filteredMeals = meals;
       _isLoading = false;
     });
+  }
+
+  Future<void> _loadFavorites() async {
+    try {
+      final favorites = await _favoritesService.getFavorites();
+      if (mounted) {
+        setState(() {
+          _favoriteIds = favorites.map((f) => f.idMeal).toSet();
+          _favoritesLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading favorites: $e');
+      if (mounted) {
+        setState(() {
+          _favoritesLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Грешка при вчитување на омилени: ${e.toString()}'),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _searchMeals(String query) async {
@@ -62,12 +94,63 @@ class _MealsScreenState extends State<MealsScreen> {
     }
   }
 
+  Future<void> _toggleFavorite(Meal meal) async {
+    if (_favoritesLoading) return; // Don't allow toggling while loading
+    
+    final alreadyFavorite = _favoriteIds.contains(meal.idMeal);
+    setState(() {
+      if (alreadyFavorite) {
+        _favoriteIds.remove(meal.idMeal);
+      } else {
+        _favoriteIds.add(meal.idMeal);
+      }
+    });
+
+    try {
+      if (alreadyFavorite) {
+        await _favoritesService.removeFavorite(meal.idMeal);
+      } else {
+        await _favoritesService.addFavorite(FavoriteMeal.fromMeal(meal));
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(alreadyFavorite
+              ? 'Рецептот е отстранет од омилени'
+              : 'Рецептот е додаден во омилени'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      // revert on error
+      print('Error toggling favorite: $e');
+      await _loadFavorites();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Не успеав да ја ажурирам омилената листа: ${e.toString()}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.categoryName),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            tooltip: 'Омилени рецепти',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FavoritesScreen()),
+              ).then((_) => _loadFavorites());
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.shuffle),
             onPressed: _showRandomMeal,
@@ -117,6 +200,10 @@ class _MealsScreenState extends State<MealsScreen> {
                                   ),
                                 );
                               },
+                              onFavoriteTap: _favoritesLoading
+                                  ? null
+                                  : () => _toggleFavorite(meal),
+                              isFavorite: _favoriteIds.contains(meal.idMeal),
                             );
                           },
                         ),

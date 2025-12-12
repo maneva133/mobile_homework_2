@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/meal_service.dart';
+import '../services/notification_service.dart';
 import '../widgets/category_card.dart';
 import '../widgets/search_bar.dart';
 import 'meals_screen.dart';
 import 'meal_detail_screen.dart';
+import 'favorites_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({Key? key}) : super(key: key);
@@ -72,6 +74,31 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_active),
+            tooltip: 'Тест нотификација',
+            onPressed: () async {
+              await NotificationService.instance.showTestNotification();
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Нотификацијата е испратена!'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.favorite),
+            tooltip: 'Омилени рецепти',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FavoritesScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.shuffle),
             onPressed: _showRandomMeal,

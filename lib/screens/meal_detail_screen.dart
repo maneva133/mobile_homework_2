@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/meal_detail.dart';
+import '../models/favorite_meal.dart';
 import '../services/meal_service.dart';
+import '../services/favorites_service.dart';
 
 class MealDetailScreen extends StatefulWidget {
   final String mealId;
@@ -13,13 +15,17 @@ class MealDetailScreen extends StatefulWidget {
 
 class _MealDetailScreenState extends State<MealDetailScreen> {
   final MealService _mealService = MealService();
+  final FavoritesService _favoritesService = FavoritesService();
   MealDetail? _meal;
   bool _isLoading = true;
+  bool _isFavorite = false;
+  bool _favoriteLoading = true;
 
   @override
   void initState() {
     super.initState();
     _loadMealDetails();
+    _checkFavorite();
   }
 
   Future<void> _loadMealDetails() async {
@@ -28,6 +34,70 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       _meal = meal;
       _isLoading = false;
     });
+  }
+
+  Future<void> _checkFavorite() async {
+    try {
+      final isFav = await _favoritesService.isFavorite(widget.mealId);
+      if (mounted) {
+        setState(() {
+          _isFavorite = isFav;
+          _favoriteLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error checking favorite: $e');
+      if (mounted) {
+        setState(() {
+          _favoriteLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_favoriteLoading || _meal == null) return;
+    
+    final wasFavorite = _isFavorite;
+    setState(() {
+      _isFavorite = !_isFavorite;
+    });
+
+    try {
+      if (wasFavorite) {
+        await _favoritesService.removeFavorite(_meal!.idMeal);
+      } else {
+        await _favoritesService.addFavorite(
+          FavoriteMeal(
+            idMeal: _meal!.idMeal,
+            strMeal: _meal!.strMeal,
+            strMealThumb: _meal!.strMealThumb,
+          ),
+        );
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(wasFavorite
+              ? 'Рецептот е отстранет од омилени'
+              : 'Рецептот е додаден во омилени'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      // revert on error
+      print('Error toggling favorite: $e');
+      setState(() {
+        _isFavorite = wasFavorite;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Не успеав да ја ажурирам омилената листа: ${e.toString()}'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   Future<void> _showRandomMeal() async {
@@ -67,6 +137,13 @@ class _MealDetailScreenState extends State<MealDetailScreen> {
       appBar: AppBar(
         title: Text(_meal?.strMeal ?? 'Рецепт'),
         actions: [
+          if (!_favoriteLoading)
+            IconButton(
+              icon: Icon(_isFavorite ? Icons.favorite : Icons.favorite_border),
+              onPressed: _toggleFavorite,
+              tooltip: _isFavorite ? 'Отстрани од омилени' : 'Додај во омилени',
+              color: _isFavorite ? Colors.redAccent : null,
+            ),
           IconButton(
             icon: const Icon(Icons.shuffle),
             onPressed: _showRandomMeal,

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "51178771910",
+    "project_id": "mealrecipeapp-5ed98",
+    "storage_bucket": "mealrecipeapp-5ed98.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:51178771910:android:799288e7776acd7c4bcec7",
+        "android_client_info": {
+          "package_name": "com.example.mobile_homework_2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCPkQ8oBKnRWgm_TxCiLiP1nSlIEI0dNxQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
